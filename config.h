@@ -16,18 +16,40 @@ static int smartgaps          = 0;        /* 1 means no outer gap when there is 
 static int showbar            = 1;        /* 0 means no bar */
 static int topbar             = 1;        /* 0 means bottom bar */
 static char *fonts[]          = { "monospace:size=10", "JoyPixels:pixelsize=10:antialias=true:autohint=true"  };
-static char normbgcolor[]           = "#222222";
-static char normbordercolor[]       = "#444444";
+static char normbgcolor[]           = "#010101";
+static char normbordercolor[]       = "#222222";
 static char normfgcolor[]           = "#bbbbbb";
 static char selfgcolor[]            = "#eeeeee";
-static char selbordercolor[]        = "#770000";
-static char selbgcolor[]            = "#005577";
+static char selbordercolor[]        = "#010101";
+static char selbgcolor[]            = "#010101";
+
+static const unsigned int baralpha = 0xd0;
+static const unsigned int borderalpha = OPAQUE;
+
 static char *colors[][3] = {
        /*               fg           bg           border   */
        [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
        [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
+       [SchemeTitleNorm] = { normfgcolor, normbgcolor, normbordercolor },
+       [SchemeTitleSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
+       [SchemeTagsNorm] = { normfgcolor, normbgcolor, normbordercolor },
+       [SchemeTagsSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
+       [SchemeHidNorm] = { normfgcolor, normbgcolor, normbordercolor },
+       [SchemeHidSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
+       [SchemeUrg] = { normfgcolor, normbgcolor, normbordercolor },
 };
-
+static const unsigned int alphas[][3]      = {
+	/*               fg      bg        border     */
+	[SchemeNorm] 	     = { OPAQUE, baralpha, borderalpha },
+	[SchemeSel]          = { OPAQUE, baralpha, borderalpha },
+	[SchemeTitleNorm]    = { OPAQUE, baralpha, borderalpha },
+	[SchemeTitleSel]     = { OPAQUE, baralpha, borderalpha },
+	[SchemeTagsNorm]     = { OPAQUE, baralpha, borderalpha },
+	[SchemeTagsSel]      = { OPAQUE, baralpha, borderalpha },
+	[SchemeHidNorm]      = { OPAQUE, baralpha, borderalpha },
+	[SchemeHidSel]       = { OPAQUE, baralpha, borderalpha },
+	[SchemeUrg]          = { OPAQUE, baralpha, borderalpha },
+};
 typedef struct {
 	const char *name;
 	const void *cmd;
@@ -64,19 +86,23 @@ static int resizehints = 0;    /* 1 means respect size hints in tiled resizals *
 #include "vanitygaps.c"
 static const Layout layouts[] = {
 	/* symbol     arrange function */
-	{ "[]=",	tile },			/* Default: Master on left, slaves on right */
-	{ "TTT",	bstack },		/* Master on top, slaves on bottom */
+	{ "[]=",	tile },				/* Default: Master on left, slaves on right */
+	{ "TTT",	bstack },			/* Master on top, slaves on bottom */
 
-	{ "[@]",	spiral },		/* Fibonacci spiral */
-	{ "[\\]",	dwindle },		/* Decreasing in size right and leftward */
+	{ "[@]",	spiral },			/* Fibonacci spiral */
+	{ "[\\]",	dwindle },			/* Decreasing in size right and leftward */
 
-	{ "[D]",	deck },			/* Master on left, slaves in monocle-like mode on right */
-	{ "[M]",	monocle },		/* All windows on top of eachother */
+	{ "[D]",	deck },				/* Master on left, slaves in monocle-like mode on right */
+	{ "[M]",	monocle },			/* All windows on top of eachother */
 
 	{ "|M|",	centeredmaster },		/* Master in middle, slaves on sides */
 	{ ">M>",	centeredfloatingmaster },	/* Same but master floats */
 
-	{ "><>",	NULL },			/* no layout function means floating behavior */
+        { "###",     	horizgrid },			/* Horizontal Grid. This is a grid that puts the "master" on top */
+	{ "|||",        gaplessgrid },			/* Gapless Grid, Like horizontal grid, but the "master" is on the left */
+
+	{ "><>",	NULL },				/* no layout function means floating behavior */
+
 	{ NULL,		NULL },
 };
 
@@ -106,12 +132,8 @@ static const char *termcmd[]  = { TERMINAL, NULL };
  * Xresources preferences to load at startup
  */
 ResourcePref resources[] = {
-		{ "color0",		STRING,	&normbordercolor },
-		{ "color8",		STRING,	&selbordercolor },
-		{ "color0",		STRING,	&normbgcolor },
-		{ "color4",		STRING,	&normfgcolor },
-		{ "color0",		STRING,	&selfgcolor },
-		{ "color4",		STRING,	&selbgcolor },
+	/*	{ "baralpha",		INTEGER, &baralpha }, */
+	/*	{ "borderalpha",	INTEGER, &borderalpha }, */
 		{ "borderpx",		INTEGER, &borderpx },
 		{ "snap",		INTEGER, &snap },
 		{ "showbar",		INTEGER, &showbar },
@@ -125,6 +147,12 @@ ResourcePref resources[] = {
 		{ "gappov",		INTEGER, &gappov },
 		{ "swallowfloating",	INTEGER, &swallowfloating },
 		{ "smartgaps",		INTEGER, &smartgaps },
+		{ "normbgcolor",	STRING, &normbgcolor },
+		{ "normbordercolor", 	STRING, &normbordercolor },
+		{ "normfgcolor",	STRING, &normfgcolor },
+		{ "selfgcolor",		STRING, &selfgcolor },
+		{ "selbordercolor", 	STRING, &selbordercolor },
+		{ "selbgcolor",		STRING, &selbgcolor },
 };
 
 #include <X11/XF86keysym.h>
@@ -173,6 +201,8 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,		XK_u,		setlayout,	{.v = &layouts[5]} }, /* monocle */
 	{ MODKEY,			XK_i,		setlayout,	{.v = &layouts[6]} }, /* centeredmaster */
 	{ MODKEY|ShiftMask,		XK_i,		setlayout,	{.v = &layouts[7]} }, /* centeredfloatingmaster */
+	{ MODKEY|ControlMask,		XK_comma,  	cyclelayout,    {.i = -1 } },
+	{ MODKEY|ControlMask,           XK_period, 	cyclelayout,    {.i = +1 } },
 	{ MODKEY,			XK_o,		incnmaster,     {.i = +1 } },
 	{ MODKEY|ShiftMask,		XK_o,		incnmaster,     {.i = -1 } },
 	{ MODKEY,			XK_p,			spawn,		SHCMD("mpc toggle") },
@@ -201,7 +231,6 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,		XK_semicolon,	shifttag,	{ .i = 1 } },
 	{ MODKEY,			XK_apostrophe,	togglescratch,	{.ui = 1} },
 	/* { MODKEY|ShiftMask,		XK_apostrophe,	spawn,		SHCMD("") }, */
-	{ MODKEY|ShiftMask,		XK_apostrophe,	togglesmartgaps,	{0} },
 	{ MODKEY,			XK_Return,	spawn,		{.v = termcmd } },
 	{ MODKEY|ShiftMask,		XK_Return,	togglescratch,	{.ui = 0} },
 
@@ -330,3 +359,4 @@ static Button buttons[] = {
 	{ ClkTagBar,		0,		Button5,	shiftview,	{.i = 1} },
 	{ ClkRootWin,		0,		Button2,	togglebar,	{0} },
 };
+
