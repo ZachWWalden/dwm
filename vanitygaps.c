@@ -551,7 +551,6 @@ tile(Monitor *m)
 		}
 }
 
-
 static void
 horizgrid(Monitor *m) {
 	Client *c;
@@ -658,4 +657,3 @@ gaplessgrid(Monitor *m)
 		}
 	}
 }
-
