@@ -307,7 +307,7 @@ static const Key keys[] = {
 	/* { 0, XF86XK_PowerOff,                       spawn,                  {.v = (const char*[]){ "sysact", NULL } } }, */
 	{ 0, XF86XK_Calculator,                        spawn,                  {.v = (const char*[]){ TERMINAL, "-e", "bc", "-l", NULL } } },
 	{ 0, XF86XK_Sleep,                             spawn,                  {.v = (const char*[]){ "sudo", "-A", "zzz", NULL } } },
-	{ 0, XF86XK_WWW,                               spawn,                  {.v = (const char*[]){ BROWSER, NULL } } },
+	{ 0, XF86XK_WWW,                               spawn,                  {.v = (const char*[]){ BROWSER_0, NULL } } },
 	{ 0, XF86XK_DOS,                               spawn,                  {.v = termcmd } },
 	{ 0, XF86XK_ScreenSaver,                       spawn,                  SHCMD("slock & xset dpms force off; mpc pause; pauseallmpv") },
 	{ 0, XF86XK_TaskPane,                          spawn,                  {.v = (const char*[]){ TERMINAL, "-e", "htop", NULL } } },
@@ -365,3 +365,4 @@ static const Button buttons[] = {
 	{ ClkTagBar,		0,		     Button5,	     shiftview,      {.i = 1} },
 	{ ClkRootWin,		0,		     Button2,	     togglebar,      {0} },
 };
+

@@ -2673,7 +2673,7 @@ xrdb(const Arg *arg)
     load_xresources();
 
     for (int i = 0; i < LENGTH(colors); i++)
-        scheme[i] = drw_scm_create(drw, colors[i], 3);
+        scheme[i] = drw_scm_create(drw, colors[i], alphas[i], 3);
 
     focus(NULL);
     arrange(NULL);
@@ -2764,3 +2764,4 @@ main(int argc, char *argv[])
 	XCloseDisplay(dpy);
 	return EXIT_SUCCESS;
 }
+
